@@ -59,7 +59,7 @@ dependencies:
   - zipp=3.19.2=pyhd8ed1ab_0
   - zlib=1.2.13=h5eee18b_1
   - pip:
-      - acvl-utils==0.2
+      # - acvl-utils==0.2
       - antlr4-python3-runtime==4.9.3
       - anyio==4.4.0
       - argon2-cffi==23.1.0
