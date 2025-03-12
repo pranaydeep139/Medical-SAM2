@@ -297,9 +297,9 @@ def validation_sam(args, val_loader, epoch, net: nn.Module, clean_dir=True):
                             plt.savefig(f'./temp/val/{name[0]}/{id}/{ann_obj_id}.png', bbox_inches='tight', pad_inches=0)
                             plt.close()
                         loss += lossfunc(pred, mask)
-                        temp = eval_seg(pred, mask, threshold)
-                        pred_iou += temp[0]
-                        pred_dice += temp[1]
+                        eiou_val, dice_val = eval_seg(pred, mask, threshold)
+                        pred_iou += eiou_val
+                        pred_dice += dice_val
 
                 total_num = len(frame_id) * len(obj_list)
                 loss = loss / total_num

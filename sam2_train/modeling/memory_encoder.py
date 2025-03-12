@@ -36,7 +36,7 @@ class MaskDownSampler(nn.Module):
         num_layers = int(math.log2(total_stride) // math.log2(stride))
         assert stride**num_layers == total_stride
         self.encoder = nn.Sequential()
-        mask_in_chans, mask_out_chans = 1, 1
+        mask_in_chans, mask_out_chans = 25, 25
         for _ in range(num_layers):
             mask_out_chans = mask_in_chans * (stride**2)
             self.encoder.append(
@@ -168,11 +168,11 @@ class MemoryEncoder(nn.Module):
         masks = self.mask_downsampler(masks)
 
         ## Fuse pix_feats and downsampled masks
-        # in case the visual features are on CPU, cast them to CUDA
         pix_feat = pix_feat.to(masks.device)
-
-        x = self.pix_feat_proj(pix_feat)
-        x = x + masks
+        x_proj = self.pix_feat_proj(pix_feat)  # x_proj shape: [B, C, H, W] e.g. H=W=64
+        # Upsample masks to match spatial dimensions of x_proj
+        masks_upsampled = F.interpolate(masks, size=x_proj.shape[2:], mode='bilinear', align_corners=False)
+        x = x_proj + masks_upsampled
         x = self.fuser(x)
         x = self.out_proj(x)
 

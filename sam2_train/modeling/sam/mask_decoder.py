@@ -101,6 +101,8 @@ class MaskDecoder(nn.Module):
             if pred_obj_scores_mlp:
                 self.pred_obj_score_head = MLP(transformer_dim, transformer_dim, 1, 3)
 
+        self.output_projection_layer = nn.Conv2d(4, 25, kernel_size=1)
+        
         # When outputting a single mask, optionally we can dynamically fall back to the best
         # multimask output token if the single mask output token gives low stability scores.
         self.dynamic_multimask_via_stability = dynamic_multimask_via_stability
@@ -142,15 +144,14 @@ class MaskDecoder(nn.Module):
             high_res_features=high_res_features,
         )
 
-        # Select the correct mask or masks for output
-        if multimask_output:
-            masks = masks[:, 1:, :, :]
-            iou_pred = iou_pred[:, 1:]
-        elif self.dynamic_multimask_via_stability and not self.training:
-            masks, iou_pred = self._dynamic_multimask_via_stability(masks, iou_pred)
-        else:
-            masks = masks[:, 0:1, :, :]
-            iou_pred = iou_pred[:, 0:1]
+        # # Select the correct mask or masks for output
+        # if multimask_output:
+        #     masks = masks[:, 1:, :, :]
+        #     iou_pred = iou_pred[:, 1:]
+        # elif self.dynamic_multimask_via_stability and not self.training:
+        #     masks, iou_pred = self._dynamic_multimask_via_stability(masks, iou_pred)
+        # else:
+        #     pass
 
         if multimask_output and self.use_multimask_token_for_obj_ptr:
             sam_tokens_out = mask_tokens_out[:, 1:]  # [b, 3, c] shape
@@ -232,6 +233,10 @@ class MaskDecoder(nn.Module):
         hyper_in = torch.stack(hyper_in_list, dim=1)
         b, c, h, w = upscaled_embedding.shape
         masks = (hyper_in @ upscaled_embedding.view(b, c, h * w)).view(b, -1, h, w)
+
+        masks = self.output_projection_layer(masks)
+        print(f"DEBUG (MaskDecoder): masks.shape after projection_layer = {masks.shape}") # **ADD THIS DEBUG PRINT**
+
 
         # Generate mask quality predictions
         iou_pred = self.iou_prediction_head(iou_token_out)

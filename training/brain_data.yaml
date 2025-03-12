@@ -1,0 +1,10 @@
+path: /storage/siddhant/work_my/new_yolo_test/training_data
+train:
+  - images/train  # Path to training images
+  - labels/train  # Path to training annotations
+val:
+  - images/val  # Path to validation images
+  - labels/val  # Path to validation annotations
+
+nc: 25
+names: ['Thalamus', 'Caudate nucleus', 'Putamen', 'Globus pallidus', 'Nucleus accumbens', 'Internal capsule', 'Substantia innominata', 'Fornix', 'Anterior commissure', 'Ganglionic eminence', 'Hypothalamus', 'Amygdala', 'Hippocampus', 'Choroid plexus', 'Lateral ventricle', 'Olfactory tubercle', 'Pretectum', 'Inferior colliculus', 'Superior colliculus', 'Tegmentum', 'Pons', 'Medulla', 'Cerebellum', 'Corpus callosum', 'Cerebral cortex']

@@ -15,7 +15,7 @@ from omegaconf import OmegaConf
 def build_sam2(
     config_file,
     ckpt_path=None,
-    device="cuda",
+    device="cpu",
     mode="eval",
     hydra_overrides_extra=[],
     apply_postprocessing=True,
@@ -32,13 +32,23 @@ def build_sam2(
     # Read config and init model
     cfg = compose(config_name=config_file, overrides=hydra_overrides_extra)
     OmegaConf.resolve(cfg)
+    # Ensure that the model configuration contains a _target_ key
+    if not hasattr(cfg.model, "_target_"):
+        raise ValueError("Configuration for model is missing the '_target_' key. "
+                         "Please update your configuration file so that Hydra can instantiate a model.")
+    
     model = instantiate(cfg.model, _recursive_=True)
     _load_checkpoint(model, ckpt_path)
-    model = model.to(device)
+    
+    # When using CPU, skip moving the model and simply return it.
+    if device != "cpu":
+        model = model.to(device)
     if mode == "eval":
-        model.eval()
+        if hasattr(model, "eval"):
+            model.eval()
+        else:
+            print("Warning: The instantiated model does not have an eval() method; skipping model.eval()")
     return model
-
 
 def build_sam2_video_predictor(
     config_file,
@@ -72,7 +82,10 @@ def build_sam2_video_predictor(
     _load_checkpoint(model, ckpt_path)
     model = model.to(device)
     if mode == "eval":
-        model.eval()
+        if hasattr(model, "eval"):
+            model.eval()
+        else:
+            print("Warning: The instantiated model does not have an eval() method; skipping model.eval()")
     return model
 
 
